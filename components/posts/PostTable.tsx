@@ -1,6 +1,6 @@
 'use client'
 
-import React,{ useEffect, useState} from "react";
+import React,{ useCallback, useEffect, useState} from "react";
 
 import { findallkeluarga } from '@/api/api';
 
@@ -10,22 +10,6 @@ import Family from '@/components/datafetch/Family';
 
 import { FamilyType } from '@/type/dbType';
 
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import Link from "next/link";
-
-
-
-
-
 const PostTable = () => {
 
   const [data, setData] = useState<FamilyType[]>([]);
@@ -33,21 +17,32 @@ const PostTable = () => {
   const [loading, setLoading] = useState(true)
 
 
+  const fetchData = useCallback(async () => {
+
+    setLoading(true);
+
+    try {
+      const result = await findallkeluarga();
+      setData(result);
+      setLoading(false);
+    } catch (error:any) {
+      setError(error);
+      setLoading(false);
+    }
+
+  }, []);
+
+
   useEffect(() => {
-const fetching = async () => {
 
-  try {
-    const result = await findallkeluarga();
-    setData(result);
-    setLoading(false);
-  } catch (error:any) {
-    setError(error);
-    setLoading(false);
-  }
-};
-fetching();
+    fetchData();
 
-  }, [])
+  }, [fetchData])
+
+
+  const handleRefresh = useCallback(async () => {
+fetchData();
+  }, [fetchData]);
 
 
   if(loading) return <div>Loading</div>
@@ -56,7 +51,7 @@ fetching();
   return  <div>
   <h1>Data Keluarga</h1>
   {data.map(family => (
-    <Family key={family.id} family={family} />
+    <Family key={family.id} family={family} onRefresh={handleRefresh}/>
   ))}
 </div>
   

@@ -54,3 +54,14 @@ export const createUser = async (data: any) => {
     throw error;
   }
 }
+
+
+export const deleteUser = async (id: string) => {
+  try {
+    const response = await axios.delete(`${API_URL}/delete-user/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data", error);
+    throw error;
+  }
+}
