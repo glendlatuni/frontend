@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
 
-
 // interfce untuk menyimpan data keluarga dari API
 interface Keluarga {
   id: string;
@@ -43,51 +42,48 @@ const kategoriIbadahOptions = ["PKB", "PW", "PAM", "PAR"] as const;
 const lingkunganValues = ["1", "2", "3", "4", "5", "6", "7"] as const;
 const kspValues = ["KSP-001", "KSP-002", "KSP-003", "KSP-004"] as const;
 
-
 // deklarasi skema dari zod untuk validasi
 const FormSchema = z.object({
   // nama
   nama_lengkap: z.string().min(2, {
     message: "Name harus diisi.",
   }),
-// tempat lahir
+  // tempat lahir
   tempat_lahir: z.string().min(2, {
     message: "Tempat lahir harus diisi.",
   }),
-// tanggal lahir
-tanggal_lahir: z
-  .string()
-  .refine((date) => !isNaN(new Date(date).getTime()), {
+  // tanggal lahir
+  tanggal_lahir: z.string().refine((date) => !isNaN(new Date(date).getTime()), {
     message: "Tanggal lahir harus valid.",
   }),
 
-// jenis kelamin
+  // jenis kelamin
   jenis_kelamin: z.enum(jenis_kelamin, {
     required_error: "Jenis kelamin harus dipilih.",
   }),
 
-// posisi dalam keluarga
+  // posisi dalam keluarga
   posisiDalamKeluarga: z.enum(posisiDalamKeluargaOptions, {
     required_error: "Posisi dalam keluarga harus dipilih.",
   }),
-// lingkungan
+  // lingkungan
   lingkungan: z
     .enum(lingkunganValues, {
       required_error: "Lingkungan harus dipilih.",
     })
     .transform((val) => parseInt(val, 10))
     .pipe(z.number().int().min(1).max(7)),
-// kategori ibadah
+  // kategori ibadah
   kategoriIbadah: z.enum(kategoriIbadahOptions, {
     required_error: "Kategori ibadah harus dipilih.",
   }),
-// keluarga
+  // keluarga
   keluarga: z.string().min(1, "Keluarga harus dipilih."),
-// ksp
+  // ksp
   ksp: z.enum(kspValues, {
     required_error: "Wajib memilih KSP",
   }),
-// alamat
+  // alamat
   alamat: z.string().min(2, {
     message: "Tempat lahir harus diisi.",
   }),
@@ -95,24 +91,22 @@ tanggal_lahir: z
   nomor_hp: z.string().min(2, {
     message: "Tempat lahir harus diisi.",
   }),
-// Majelis atau bukan
+  // Majelis atau bukan
   isMajelis: z
     .union([z.boolean(), z.string()])
     .transform((val) => val === true || val === "true")
     .pipe(z.boolean()),
-// bisa lturgi atau tidak
+  // bisa lturgi atau tidak
   liturgis: z
     .union([z.boolean(), z.string()])
     .transform((val) => val === true || val === "true")
     .pipe(z.boolean()),
 });
 
-
-
 const InputAnggota = () => {
   // state untuk menimpa data keluarga dari backend
   const [keluargaOptions, SetKeluargaOptions] = useState<Keluarga[]>([]);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // fetch data keluarga dari backend untuk ditampilkan di dropdown
   useEffect(() => {
     const fetchData = async () => {
@@ -130,13 +124,14 @@ const InputAnggota = () => {
 
   // function untuk mengirimkan data
   async function onSubmit(values: z.infer<typeof FormSchema>) {
+    setIsSubmitting(true);
     console.log(values);
     // Block kode untuk  mengirimkan data ke server
     try {
       const formattedValues = {
         ...values,
-        tanggal_lahir: values.tanggal_lahir 
-          ? new Date(values.tanggal_lahir + 'T00:00:00Z').toISOString()
+        tanggal_lahir: values.tanggal_lahir
+          ? new Date(values.tanggal_lahir + "T00:00:00Z").toISOString()
           : null,
         lingkungan: Number(values.lingkungan),
         // Pastikan keluarga adalah string ID
@@ -145,7 +140,7 @@ const InputAnggota = () => {
 
       const newUser = await createUser({ user: formattedValues });
       console.log("User created successfully:", newUser);
-      form.reset();
+
       toast.success("Data berhasil disubmit!", {
         position: "top-right",
         autoClose: 3000,
@@ -157,6 +152,9 @@ const InputAnggota = () => {
     } catch (error) {
       console.error("Error fetching data", error);
       throw error;
+    } finally {
+      form.reset();
+      setIsSubmitting(false);
     }
   }
 
@@ -199,9 +197,7 @@ const InputAnggota = () => {
               <FormItem>
                 <FormLabel>TANGGAL LAHIR</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} 
-                    value={field.value || ''}
-                  />
+                  <Input type="date" {...field} value={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -445,8 +441,9 @@ const InputAnggota = () => {
               </Select>
             )}
           />
-
-          <Button type="submit">Submit</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
         </form>
       </Form>
     </div>

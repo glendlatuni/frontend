@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "../ui/button";
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+import { v4 as uuidv4 } from 'uuid';
+
 const formSchema = z.object({
   nama_keluarga: z.string().min(2, {
     message: "Username must be at least 2 characters.",
@@ -37,9 +39,16 @@ const FormKeluarga = () => {
     },
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+
     try {
       await createKeluarga(values);
+    
 
       toast.success("Data berhasil disubmit!", {
         position: "top-right",
@@ -61,6 +70,8 @@ const FormKeluarga = () => {
         pauseOnHover: true,
         draggable: true,
       });
+    }finally{
+      setIsSubmitting(false);
     }
   }
   return (
@@ -83,7 +94,7 @@ const FormKeluarga = () => {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Submitting..." : "Submit"}</Button>
         </form>
       </Form>
       <ToastContainer />
